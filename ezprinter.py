@@ -21,9 +21,10 @@
  *                                                                         *
  ***************************************************************************/
 """
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QSize, QRectF, QSizeF
+from qgis.PyQt.QtGui import QIcon, QImage, QPainter, QCursor
 from qgis.PyQt.QtWidgets import QAction
+from qgis.core import *
 # Initialize Qt resources from file resources.py
 from .resources import *
 
@@ -31,8 +32,8 @@ from .resources import *
 from .ezprinter_dockwidget import EZPrinterDockWidget
 import os.path
 
-from .paperSettings import PaperSettings
-from .scaleSettings import ScaleSettings
+from .clickTool import ClickTool
+from .constants import Constants as CONSTANTS
 from .printWindow import PrintWindow
 
 
@@ -239,8 +240,7 @@ class EZPrinter:
 
     def initPapersCombobox(self):
         combobox = self.dockwidget.papersComboBox
-        ps = PaperSettings()
-        papers = ps.getPapers()
+        papers = CONSTANTS.PAPERS
         for paper in papers:
             combobox.addItem(paper, papers[paper])
             #default
@@ -250,20 +250,136 @@ class EZPrinter:
     def initScalesCombobox(self):
         combobox = self.dockwidget.scalesComboBox
         combobox.setEditable(True)
-        ss = ScaleSettings()
-        scales = ss.getScales()
+        scales = CONSTANTS.DEFAULT_SCALES
         for scale in scales:
             combobox.addItem(str(scale), scale)
             #default
             if scale == 2500:
                 combobox.setCurrentIndex(combobox.count() - 1)
 
-    def selectButtonPushed(self):
-        pw = PrintWindow()
-        pw.show()
+    def initDpiCombobox(self):
+        combobox = self.dockwidget.dpiComboBox
+        combobox.setEditable(True)
+        dpis = CONSTANTS.DEFAULT_DPIS
+        for dpi in dpis:
+            combobox.addItem(str(dpi), dpi)
+            #default
+            if dpi == 96:
+                combobox.setCurrentIndex(combobox.count() - 1)
 
+    def initClicktool(self):
+        if not isinstance(self.iface.mapCanvas().mapTool(), ClickTool):
+            return
+        paperSize = self.dockwidget.papersComboBox.currentData()
+        printScale = self.dockwidget.scalesComboBox.currentData()
+        horizontal = self.dockwidget.horizontalCheckBox.isChecked()
+        ct = ClickTool(self.iface,  self.mapCanvasClicked, paperSize, printScale, horizontal)
+        self.iface.mapCanvas().setMapTool(ct)
+
+    def selectButtonPushed(self):
+        if not isinstance(self.iface.mapCanvas().mapTool(), ClickTool):
+            self.previous_map_tool = self.iface.mapCanvas().mapTool()
+        paperSize = self.dockwidget.papersComboBox.currentData()
+        printScale = self.dockwidget.scalesComboBox.currentData()
+        horizontal = self.dockwidget.horizontalCheckBox.isChecked()
+        ct = ClickTool(self.iface,  self.makePrintLayout, paperSize, printScale, horizontal)
+        self.iface.mapCanvas().setMapTool(ct)
+
+    def toggleGuiChangeEvent(self):
+        self.dockwidget.papersComboBox.currentIndexChanged.connect(self.initClicktool)
+        self.dockwidget.scalesComboBox.currentTextChanged.connect(self.initClicktool)
+        self.dockwidget.dpiComboBox.currentTextChanged.connect(self.initClicktool)
+        self.dockwidget.horizontalCheckBox.stateChanged.connect(self.initClicktool)
+        self.dockwidget.wideModeCheckBox.stateChanged.connect(self.initClicktool)
 
     def initCustomGUIs(self):
         self.initPapersCombobox()
         self.initScalesCombobox()
+        self.initDpiCombobox()
+        self.toggleGuiChangeEvent()
         self.dockwidget.selectButton.clicked.connect(self.selectButtonPushed)
+        self.iface.mapCanvas().scaleChanged.connect(self.initClicktool)
+
+    #make MapCanvas image, clipped by rectangle of coordinates.
+    def mapCanvasClicked(self, coordinates):
+        dpi = self.dockwidget.dpiComboBox.currentData()
+        paperSize = self.dockwidget.papersComboBox.currentData()
+        horizontal = self.dockwidget.horizontalCheckBox.isChecked()
+        
+        width = paperSize[0] - CONSTANTS.PAPER_MARGINS['left'] - CONSTANTS.PAPER_MARGINS['right']
+        height = paperSize[1] - CONSTANTS.PAPER_MARGINS['top'] - CONSTANTS.PAPER_MARGINS['bottom']
+        if horizontal:
+            width = paperSize[1] - CONSTANTS.PAPER_MARGINS['left'] - CONSTANTS.PAPER_MARGINS['right']
+            height = paperSize[0] - CONSTANTS.PAPER_MARGINS['top'] - CONSTANTS.PAPER_MARGINS['bottom']
+
+        mapSettings = self.iface.mapCanvas().mapSettings()
+        mapSettings.setExtent(QgsRectangle(coordinates[0], coordinates[1]))
+        mapSettings.setOutputDpi(dpi)
+        mapSettings.setOutputSize(QSize(dpi * width / 25.4, dpi * height / 25.4))
+
+        mapImage = self.makeImage(mapSettings)
+        mapImage.save("/Users/kanahiroiguchi/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/ezprinter/test.png", "png")
+
+        self.iface.mapCanvas().setMapTool(self.previous_map_tool)
+
+        self.makePrintLayout(coordinates)
+
+    #make and return QImage from MapCanvas, clipped by selected Print Area
+    def makeImage(self, mapSettings):
+        image = QImage(mapSettings.outputSize(), QImage.Format_RGB32)
+        p = QPainter()
+        p.begin(image)
+        mapRenderer = QgsMapRendererCustomPainterJob(mapSettings, p)
+        mapRenderer.start()
+        mapRenderer.waitForFinished()
+        p.end()
+        return image
+
+    def makePrintLayout(self, coordinates):
+        dpi = self.dockwidget.dpiComboBox.currentData()
+        paperSize = self.dockwidget.papersComboBox.currentData()
+        horizontal = self.dockwidget.horizontalCheckBox.isChecked()
+
+        #init PrintLayout
+        project = QgsProject.instance()
+        printLayout = QgsPrintLayout(project)
+        printLayout.initializeDefaults()
+        printLayout.setUnits(QgsUnitTypes.LayoutMillimeters)
+
+        #paper setting
+        paperWidth = paperSize[0]
+        paperHeight = paperSize[1]
+        if horizontal:
+            paperWidth = paperSize[1]
+            paperHeight = paperSize[0]
+
+        page = printLayout.pageCollection().pages()[0]
+        page.setPageSize(QgsLayoutSize(paperWidth, paperHeight))
+
+        #map area
+        mapWidth = paperWidth - CONSTANTS.PAPER_MARGINS['left'] - CONSTANTS.PAPER_MARGINS['right']
+        mapHeight = paperHeight - CONSTANTS.PAPER_MARGINS['top'] - CONSTANTS.PAPER_MARGINS['bottom']
+        
+        projectMap = QgsLayoutItemMap(printLayout)
+        projectMap.updateBoundingRect()
+        projectMap.setRect(QRectF(CONSTANTS.PAPER_MARGINS['left'], CONSTANTS.PAPER_MARGINS['top'], mapWidth, mapHeight)) 
+        projectMap.setPos(CONSTANTS.PAPER_MARGINS['left'], CONSTANTS.PAPER_MARGINS['top'])
+        projectMap.setFrameEnabled(True)
+        projectMap.setLayers(project.mapThemeCollection().masterVisibleLayers())
+        projectMap.setExtent(QgsRectangle(coordinates[0], coordinates[1]))
+        projectMap.attemptSetSceneRect(QRectF(CONSTANTS.PAPER_MARGINS['left'], CONSTANTS.PAPER_MARGINS['top'], mapWidth, mapHeight))
+        printLayout.addItem(projectMap)
+
+        '''
+        #output PDF
+        exporter =  QgsLayoutExporter(printLayout)
+        pdf_settings = exporter.PdfExportSettings()
+        exporter.exportToPdf("/Users/kanahiroiguchi/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/ezprinter/test.pdf", pdf_settings)
+        
+        #render image on memory
+        img_settings = exporter.ImageExportSettings()
+        printLayoutImage = exporter.renderPageToImage(0)
+        '''
+
+        #preview
+        pw = PrintWindow(printLayout)
