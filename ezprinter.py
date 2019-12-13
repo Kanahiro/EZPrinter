@@ -22,7 +22,7 @@
  ***************************************************************************/
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt, QSize, QRectF, QSizeF
-from qgis.PyQt.QtGui import QIcon, QImage, QPainter, QCursor
+from qgis.PyQt.QtGui import QIcon, QImage, QPainter, QCursor, QGuiApplication
 from qgis.PyQt.QtWidgets import QAction
 from qgis.core import *
 # Initialize Qt resources from file resources.py
@@ -242,7 +242,7 @@ class EZPrinter:
         combobox = self.dockwidget.papersComboBox
         papers = CONSTANTS.PAPERS
         for paper in papers:
-            combobox.addItem(paper, papers[paper])
+            combobox.addItem(paper +  ":" + str(papers[paper]), papers[paper])
             #default
             if paper == "A4":
                 combobox.setCurrentIndex(combobox.count() - 1)
@@ -257,12 +257,14 @@ class EZPrinter:
             if scale == 2500:
                 combobox.setCurrentIndex(combobox.count() - 1)
 
+
     def initClicktool(self):
         if not isinstance(self.iface.mapCanvas().mapTool(), ClickTool):
             return
         paperSize = self.dockwidget.papersComboBox.currentData()
         printScale = self.dockwidget.scalesComboBox.currentData()
         horizontal = self.dockwidget.horizontalCheckBox.isChecked()
+        #wideMode = self.dockwidget.wideModeCheckBox.isChecked()
         ct = ClickTool(self.iface,  self.mapCanvasClicked, paperSize, printScale, horizontal)
         self.iface.mapCanvas().setMapTool(ct)
 
@@ -272,15 +274,14 @@ class EZPrinter:
         paperSize = self.dockwidget.papersComboBox.currentData()
         printScale = self.dockwidget.scalesComboBox.currentData()
         horizontal = self.dockwidget.horizontalCheckBox.isChecked()
-        ct = ClickTool(self.iface,  self.makePrintLayout, paperSize, printScale, horizontal)
+        ct = ClickTool(self.iface,  self.mapCanvasClicked, paperSize, printScale, horizontal)
         self.iface.mapCanvas().setMapTool(ct)
 
     def toggleGuiChangeEvent(self):
         self.dockwidget.papersComboBox.currentIndexChanged.connect(self.initClicktool)
         self.dockwidget.scalesComboBox.currentTextChanged.connect(self.initClicktool)
-        self.dockwidget.dpiComboBox.currentTextChanged.connect(self.initClicktool)
         self.dockwidget.horizontalCheckBox.stateChanged.connect(self.initClicktool)
-        self.dockwidget.wideModeCheckBox.stateChanged.connect(self.initClicktool)
+        #self.dockwidget.wideModeCheckBox.stateChanged.connect(self.initClicktool)
 
     def initCustomGUIs(self):
         self.initPapersCombobox()
@@ -288,30 +289,6 @@ class EZPrinter:
         self.toggleGuiChangeEvent()
         self.dockwidget.selectButton.clicked.connect(self.selectButtonPushed)
         self.iface.mapCanvas().scaleChanged.connect(self.initClicktool)
-
-    #make MapCanvas image, clipped by rectangle of coordinates.
-    def mapCanvasClicked(self, coordinates):
-        dpi = self.dockwidget.dpiComboBox.currentData()
-        paperSize = self.dockwidget.papersComboBox.currentData()
-        horizontal = self.dockwidget.horizontalCheckBox.isChecked()
-        
-        width = paperSize[0] - CONSTANTS.PAPER_MARGINS['left'] - CONSTANTS.PAPER_MARGINS['right']
-        height = paperSize[1] - CONSTANTS.PAPER_MARGINS['top'] - CONSTANTS.PAPER_MARGINS['bottom']
-        if horizontal:
-            width = paperSize[1] - CONSTANTS.PAPER_MARGINS['left'] - CONSTANTS.PAPER_MARGINS['right']
-            height = paperSize[0] - CONSTANTS.PAPER_MARGINS['top'] - CONSTANTS.PAPER_MARGINS['bottom']
-
-        mapSettings = self.iface.mapCanvas().mapSettings()
-        mapSettings.setExtent(QgsRectangle(coordinates[0], coordinates[1]))
-        mapSettings.setOutputDpi(dpi)
-        mapSettings.setOutputSize(QSize(dpi * width / 25.4, dpi * height / 25.4))
-
-        mapImage = self.makeImage(mapSettings)
-        mapImage.save("/Users/kanahiroiguchi/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/ezprinter/test.png", "png")
-
-        self.iface.mapCanvas().setMapTool(self.previous_map_tool)
-
-        self.makePrintLayout(coordinates)
 
     #make and return QImage from MapCanvas, clipped by selected Print Area
     def makeImage(self, mapSettings):
@@ -324,9 +301,16 @@ class EZPrinter:
         p.end()
         return image
 
-    def makePrintLayout(self, coordinates):
+    def mapCanvasClicked(self, coordinates):
+        #set cursor as waiting mode
+        self.iface.mapCanvas().mapTool().setCursor(Qt.WaitCursor)
+
+        #init vars
         paperSize = self.dockwidget.papersComboBox.currentData()
+        printScale = self.dockwidget.scalesComboBox.currentData()
         horizontal = self.dockwidget.horizontalCheckBox.isChecked()
+        #widemode = self.dockwidget.wideModeCheckBox.isChecked()
+        rotation = self.iface.mapCanvas().rotation()
 
         #init PrintLayout
         project = QgsProject.instance()
@@ -345,17 +329,26 @@ class EZPrinter:
         page.setPageSize(QgsLayoutSize(paperWidth, paperHeight))
 
         #map area
+        ##papersize Setting
         mapWidth = paperWidth - CONSTANTS.PAPER_MARGINS['left'] - CONSTANTS.PAPER_MARGINS['right']
         mapHeight = paperHeight - CONSTANTS.PAPER_MARGINS['top'] - CONSTANTS.PAPER_MARGINS['bottom']
         
+        ##mapsetting on paper
         projectMap = QgsLayoutItemMap(printLayout)
         projectMap.updateBoundingRect()
         projectMap.setRect(QRectF(CONSTANTS.PAPER_MARGINS['left'], CONSTANTS.PAPER_MARGINS['top'], mapWidth, mapHeight)) 
         projectMap.setPos(CONSTANTS.PAPER_MARGINS['left'], CONSTANTS.PAPER_MARGINS['top'])
         projectMap.setFrameEnabled(True)
+        ##map geometry setting
         projectMap.setLayers(project.mapThemeCollection().masterVisibleLayers())
-        projectMap.setExtent(QgsRectangle(coordinates[0], coordinates[1]))
+        ###when map is rotated, extent setting will not work correctly.
+        ###So, by run setExtent() firstly in order to define CENTER of map and then,
+        ###define rotation and scale of the map.
+        projectMap.setExtent(QgsRectangle(coordinates["topLeft"], coordinates["bottomRight"]))
+        projectMap.setMapRotation(rotation)
+        projectMap.setScale(printScale)
         projectMap.attemptSetSceneRect(QRectF(CONSTANTS.PAPER_MARGINS['left'], CONSTANTS.PAPER_MARGINS['top'], mapWidth, mapHeight))
+        
         printLayout.addItem(projectMap)
 
         '''
@@ -368,6 +361,7 @@ class EZPrinter:
         img_settings = exporter.ImageExportSettings()
         printLayoutImage = exporter.renderPageToImage(0)
         '''
-        self.iface.mapCanvas().setMapTool(self.previous_map_tool)
+
         #preview
-        pw = PrintWindow(printLayout, projectMap)
+        pw = PrintWindow(self.iface, printLayout, projectMap)
+        self.iface.mapCanvas().setMapTool(self.previous_map_tool)

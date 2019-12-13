@@ -18,8 +18,8 @@ class Constants:
     PAPER_MARGINS = {
         "left":10,
         "right":10,
-        "top":10,
-        "bottom":10
+        "top":20,
+        "bottom":15
     }
     TITLE_FONTSIZE = 20
     SUBTEXT_FONTSIZE = 10

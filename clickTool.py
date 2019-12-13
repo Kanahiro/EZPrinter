@@ -13,6 +13,7 @@ class ClickTool(QgsMapTool):
         self.paperSize = paperSize
         self.printScale = printScale
         self.horizontal = horizontal
+        self.wideMode = wideMode
         self.drugging = False
         self.reloadCursorRectangle()
         return None
@@ -24,10 +25,19 @@ class ClickTool(QgsMapTool):
         self.drugging = True
         point = QPoint(e.pos().x(),e.pos().y())
         rect = self.makeRectBy(point)
+
         #convert CANVAS POINTS to MAP COORDINATES
         pointTopLeft = self.iface.mapCanvas().getCoordinateTransform().toMapPoint(rect.left(), rect.top())
+        pointTopRight = self.iface.mapCanvas().getCoordinateTransform().toMapPoint(rect.left() + rect.width(), rect.top())
         pointBottomRight = self.iface.mapCanvas().getCoordinateTransform().toMapPoint(rect.left() + rect.width(), rect.top() + rect.height())
-        self.callback((pointTopLeft, pointBottomRight))
+        pointBottomLeft = self.iface.mapCanvas().getCoordinateTransform().toMapPoint(rect.left(), rect.top() + rect.height())
+        coordinates = {
+            "topLeft":pointTopLeft,
+            "topRight":pointTopRight,
+            "bottomRight":pointBottomRight,
+            "bottomLeft":pointBottomLeft
+        }
+        self.callback(coordinates)
         return None
 
     #make rectangle same shape to mapcanvas rect, with point
@@ -57,12 +67,14 @@ class ClickTool(QgsMapTool):
         return QPixmap.fromImage(image)
 
     def calcRectSize(self):
+        #mili meter of papersize
         width = self.paperSize[0] - CONSTANTS.PAPER_MARGINS['left'] - CONSTANTS.PAPER_MARGINS['right']
         height = self.paperSize[1] - CONSTANTS.PAPER_MARGINS['top'] - CONSTANTS.PAPER_MARGINS['bottom']
         if self.horizontal:
             width = self.paperSize[1] - CONSTANTS.PAPER_MARGINS['left'] - CONSTANTS.PAPER_MARGINS['right']
             height = self.paperSize[0] - CONSTANTS.PAPER_MARGINS['top'] - CONSTANTS.PAPER_MARGINS['bottom']
 
+        #pixel calculated by the mili meters, dpi and scale
         zoom = round(self.iface.mapCanvas().scale())
         dpi = self.iface.mapCanvas().mapSettings().outputDpi()
         rectSize = (dpi / 25.4 * width * self.printScale / zoom,

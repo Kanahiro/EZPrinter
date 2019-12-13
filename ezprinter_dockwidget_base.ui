@@ -35,8 +35,17 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>Scale:1/</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
         </property>
        </widget>
       </item>
@@ -44,7 +53,7 @@
        <widget class="QCheckBox" name="horizontalCheckBox">
         <property name="maximumSize">
          <size>
-          <width>100</width>
+          <width>150</width>
           <height>16777215</height>
          </size>
         </property>
@@ -53,7 +62,7 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="6">
+      <item row="1" column="5">
        <widget class="QPushButton" name="selectButton">
         <property name="text">
          <string>Select on Map</string>
@@ -62,19 +71,6 @@
       </item>
       <item row="1" column="1">
        <widget class="QComboBox" name="papersComboBox"/>
-      </item>
-      <item row="1" column="5">
-       <widget class="QCheckBox" name="wideModeCheckBox">
-        <property name="maximumSize">
-         <size>
-          <width>100</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="text">
-         <string>Wide mode</string>
-        </property>
-       </widget>
       </item>
      </layout>
     </item>

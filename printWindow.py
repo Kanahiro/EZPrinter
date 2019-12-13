@@ -9,12 +9,13 @@ from qgis.PyQt import QtGui, QtWidgets, uic
 from .constants import Constants as CONSTANTS
 
 class PrintWindow():
-    def __init__(self, printLayout, projectMap):
+    def __init__(self, iface, printLayout, projectMap):
         self.ui = uic.loadUi(os.path.join(os.path.dirname(__file__), 'printWindow.ui'))
+        self.iface = iface
         self.printLayout = printLayout
         self.projectMap = projectMap
 
-        self.setPdfImage(self.printLayout)
+        self.setPdfImageOf(self.printLayout)
         self.initCustomGui()
 
         self.ui.exec_()
@@ -24,10 +25,9 @@ class PrintWindow():
         img_settings = exporter.ImageExportSettings()
         printLayoutImage = exporter.renderPageToImage(0)
         pdf_settings = exporter.PdfExportSettings()
-        exporter.exportToPdf("/Users/kanahiroiguchi/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/ezprinter/test.pdf", pdf_settings)
         return printLayoutImage
 
-    def setPdfImage(self, printLayout):
+    def setPdfImageOf(self, printLayout):
         printLayoutImage = self.makeImageBy(printLayout)
         scaledImage = printLayoutImage.scaled(400, 400, Qt.KeepAspectRatio)
         self.ui.imageLabel.setPixmap(QtGui.QPixmap.fromImage(scaledImage))
@@ -36,8 +36,10 @@ class PrintWindow():
         self.ui.titleLineEdit.editingFinished.connect(self.applyGuiChangeToPrintLayout)
         self.ui.scaleBarCheck.stateChanged.connect(self.applyGuiChangeToPrintLayout)
         self.ui.subtextLineEdit.editingFinished.connect(self.applyGuiChangeToPrintLayout)
+        self.ui.exportButton.clicked.connect(self.exportButtonPushed)
 
     def applyGuiChangeToPrintLayout(self):
+        #To save default printlayout
         printLayout = self.printLayout.clone()
 
         titleLabel = self.makeTitleLabel()
@@ -50,7 +52,7 @@ class PrintWindow():
         subtextLabel = self.makeSubtextLabel()
         printLayout.addItem(subtextLabel)
 
-        self.setPdfImage(printLayout)
+        self.setPdfImageOf(printLayout)
 
     def makeTitleLabel(self):
         titleFont = QFont()
@@ -93,3 +95,6 @@ class PrintWindow():
         subtextLabel.setFont(subtextFont)
         subtextLabel.adjustSizeToText()
         return subtextLabel
+
+    def exportButtonPushed(self):
+        self.iface.messageBar().pushMessage("Info", "PDF correctly saved.", Qgis.Info)
