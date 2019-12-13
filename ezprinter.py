@@ -257,16 +257,6 @@ class EZPrinter:
             if scale == 2500:
                 combobox.setCurrentIndex(combobox.count() - 1)
 
-    def initDpiCombobox(self):
-        combobox = self.dockwidget.dpiComboBox
-        combobox.setEditable(True)
-        dpis = CONSTANTS.DEFAULT_DPIS
-        for dpi in dpis:
-            combobox.addItem(str(dpi), dpi)
-            #default
-            if dpi == 96:
-                combobox.setCurrentIndex(combobox.count() - 1)
-
     def initClicktool(self):
         if not isinstance(self.iface.mapCanvas().mapTool(), ClickTool):
             return
@@ -295,7 +285,6 @@ class EZPrinter:
     def initCustomGUIs(self):
         self.initPapersCombobox()
         self.initScalesCombobox()
-        self.initDpiCombobox()
         self.toggleGuiChangeEvent()
         self.dockwidget.selectButton.clicked.connect(self.selectButtonPushed)
         self.iface.mapCanvas().scaleChanged.connect(self.initClicktool)
@@ -336,7 +325,6 @@ class EZPrinter:
         return image
 
     def makePrintLayout(self, coordinates):
-        dpi = self.dockwidget.dpiComboBox.currentData()
         paperSize = self.dockwidget.papersComboBox.currentData()
         horizontal = self.dockwidget.horizontalCheckBox.isChecked()
 
@@ -380,6 +368,6 @@ class EZPrinter:
         img_settings = exporter.ImageExportSettings()
         printLayoutImage = exporter.renderPageToImage(0)
         '''
-
+        self.iface.mapCanvas().setMapTool(self.previous_map_tool)
         #preview
-        pw = PrintWindow(printLayout)
+        pw = PrintWindow(printLayout, projectMap)

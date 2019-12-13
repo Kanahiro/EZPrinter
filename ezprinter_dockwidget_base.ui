@@ -18,20 +18,23 @@
     <item row="0" column="0">
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="1" column="3">
-       <widget class="QComboBox" name="dpiComboBox"/>
-      </item>
-      <item row="2" column="3">
-       <widget class="QComboBox" name="scalesComboBox"/>
-      </item>
-      <item row="1" column="2" alignment="Qt::AlignRight">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>DPI(quality)</string>
+       <widget class="QComboBox" name="scalesComboBox">
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>16777215</height>
+         </size>
         </property>
        </widget>
       </item>
-      <item row="2" column="2" alignment="Qt::AlignRight">
+      <item row="1" column="2">
        <widget class="QLabel" name="label">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="text">
          <string>Scale:1/</string>
         </property>
@@ -39,25 +42,37 @@
       </item>
       <item row="1" column="4">
        <widget class="QCheckBox" name="horizontalCheckBox">
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>Horizontal</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="4">
-       <widget class="QCheckBox" name="wideModeCheckBox">
-        <property name="text">
-         <string>Wide mode</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1" rowspan="2">
-       <widget class="QComboBox" name="papersComboBox"/>
-      </item>
-      <item row="1" column="5" rowspan="2">
+      <item row="1" column="6">
        <widget class="QPushButton" name="selectButton">
         <property name="text">
          <string>Select on Map</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="papersComboBox"/>
+      </item>
+      <item row="1" column="5">
+       <widget class="QCheckBox" name="wideModeCheckBox">
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Wide mode</string>
         </property>
        </widget>
       </item>
