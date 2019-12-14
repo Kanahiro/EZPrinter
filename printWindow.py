@@ -38,8 +38,8 @@ class PrintWindow():
         self.ui.subtextLineEdit.editingFinished.connect(self.applyGuiChangeToPrintLayout)
         self.ui.exportButton.clicked.connect(self.exportButtonPushed)
 
+    #show temp printLayout to QLabel
     def applyGuiChangeToPrintLayout(self):
-        #To save default printlayout
         appliedPrintLayout = self.setGuiValueTo(self.printLayout)
         self.setPdfImageOf(appliedPrintLayout)
 
