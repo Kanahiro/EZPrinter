@@ -144,25 +144,6 @@
       </property>
      </widget>
     </item>
-    <item row="5" column="0" colspan="2" alignment="Qt::AlignHCenter">
-     <widget class="QPushButton" name="printButton">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>400</width>
-        <height>0</height>
-       </size>
-      </property>
-      <property name="text">
-       <string>Print</string>
-      </property>
-     </widget>
-    </item>
    </layout>
   </widget>
  </widget>
