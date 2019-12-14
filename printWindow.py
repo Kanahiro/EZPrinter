@@ -40,19 +40,24 @@ class PrintWindow():
 
     def applyGuiChangeToPrintLayout(self):
         #To save default printlayout
-        printLayout = self.printLayout.clone()
+        appliedPrintLayout = self.setGuiValueTo(self.printLayout)
+        self.setPdfImageOf(appliedPrintLayout)
 
+    #this method won't mutate printLayout of argument
+    #make clone and return mutated clone
+    def setGuiValueTo(self, printLayout):
+        clonePrintLayout = printLayout.clone()
         titleLabel = self.makeTitleLabel()
-        printLayout.addItem(titleLabel)
+        clonePrintLayout.addItem(titleLabel)
 
         if self.ui.scaleBarCheck.isChecked():
             scaleBar = self.makeScaleBar()
-            printLayout.addItem(scaleBar)
+            clonePrintLayout.addItem(scaleBar)
 
         subtextLabel = self.makeSubtextLabel()
-        printLayout.addItem(subtextLabel)
+        clonePrintLayout.addItem(subtextLabel)
 
-        self.setPdfImageOf(printLayout)
+        return clonePrintLayout
 
     def makeTitleLabel(self):
         titleFont = QFont()
@@ -97,4 +102,15 @@ class PrintWindow():
         return subtextLabel
 
     def exportButtonPushed(self):
-        self.iface.messageBar().pushMessage("Info", "PDF correctly saved.", Qgis.Info)
+        outputPrintLayout = self.setGuiValueTo(self.printLayout)
+
+        filepath, mimetype = QFileDialog.getSaveFileName(caption = "save pdf", directory = '', filter = '*.pdf')
+        ##if canceled
+        if not filepath:
+            return
+        exporter =  QgsLayoutExporter(outputPrintLayout)
+        pdf_settings = exporter.PdfExportSettings()
+        exporter.exportToPdf(filepath, pdf_settings)
+
+        self.iface.messageBar().pushMessage("Info", "PDF correctly saved:" + filepath, Qgis.Info)
+        self.ui.reject()
