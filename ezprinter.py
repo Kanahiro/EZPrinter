@@ -247,6 +247,9 @@ class EZPrinter:
             if paper == "A4":
                 combobox.setCurrentIndex(combobox.count() - 1)
 
+    def getPapersComboboxValue(self):
+        return self.dockwidget.papersComboBox.currentData()
+
     def initScalesCombobox(self):
         combobox = self.dockwidget.scalesComboBox
         combobox.setEditable(True)
@@ -257,22 +260,22 @@ class EZPrinter:
             if scale == 2500:
                 combobox.setCurrentIndex(combobox.count() - 1)
 
+    def getScalesComboboxValue(self):
+        return int(self.dockwidget.scalesComboBox.currentText())
 
     def initClicktool(self):
         if not isinstance(self.iface.mapCanvas().mapTool(), ClickTool):
             return
-        paperSize = self.dockwidget.papersComboBox.currentData()
-        printScale = self.dockwidget.scalesComboBox.currentData()
-        horizontal = self.dockwidget.horizontalCheckBox.isChecked()
-        #wideMode = self.dockwidget.wideModeCheckBox.isChecked()
-        ct = ClickTool(self.iface,  self.mapCanvasClicked, paperSize, printScale, horizontal)
-        self.iface.mapCanvas().setMapTool(ct)
+        self.apllyGuiValuesToClickTool()
 
     def selectButtonPushed(self):
         if not isinstance(self.iface.mapCanvas().mapTool(), ClickTool):
             self.previous_map_tool = self.iface.mapCanvas().mapTool()
-        paperSize = self.dockwidget.papersComboBox.currentData()
-        printScale = self.dockwidget.scalesComboBox.currentData()
+        self.apllyGuiValuesToClickTool()
+
+    def apllyGuiValuesToClickTool(self):
+        paperSize = self.getPapersComboboxValue()
+        printScale = self.getScalesComboboxValue()
         horizontal = self.dockwidget.horizontalCheckBox.isChecked()
         ct = ClickTool(self.iface,  self.mapCanvasClicked, paperSize, printScale, horizontal)
         self.iface.mapCanvas().setMapTool(ct)
@@ -306,8 +309,8 @@ class EZPrinter:
         self.iface.mapCanvas().mapTool().setCursor(Qt.WaitCursor)
 
         #init vars
-        paperSize = self.dockwidget.papersComboBox.currentData()
-        printScale = self.dockwidget.scalesComboBox.currentData()
+        paperSize = self.getPapersComboboxValue()
+        printScale = self.getScalesComboboxValue()
         horizontal = self.dockwidget.horizontalCheckBox.isChecked()
         #widemode = self.dockwidget.wideModeCheckBox.isChecked()
         rotation = self.iface.mapCanvas().rotation()

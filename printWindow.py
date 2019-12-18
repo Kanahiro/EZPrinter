@@ -24,7 +24,6 @@ class PrintWindow():
         exporter =  QgsLayoutExporter(printLayout)
         img_settings = exporter.ImageExportSettings()
         printLayoutImage = exporter.renderPageToImage(0)
-        pdf_settings = exporter.PdfExportSettings()
         return printLayoutImage
 
     def setPdfImageOf(self, printLayout):
