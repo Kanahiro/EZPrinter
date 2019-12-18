@@ -6,7 +6,7 @@
 name=EZPrinter
 qgisMinimumVersion=3.0
 description=Print your maps easily.
-version=0.1
+version=0.2
 author=Kanahiro Iguchi
 email=kanahiro.iguchi@gmail.com
 
