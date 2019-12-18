@@ -77,7 +77,6 @@ class ClickTool(QgsMapTool):
         #pixel calculated by the mili meters, dpi and scale
         zoom = round(self.iface.mapCanvas().scale())
         dpi = self.iface.mapCanvas().mapSettings().outputDpi()
-        print(self.printScale)
         rectSize = (width * dpi / 25.4 * self.printScale / zoom,
                     height * dpi / 25.4 * self.printScale / zoom)
         return rectSize

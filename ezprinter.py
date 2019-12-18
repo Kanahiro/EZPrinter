@@ -257,11 +257,16 @@ class EZPrinter:
         for scale in scales:
             combobox.addItem(str(scale), scale)
             #default
-            if scale == 2500:
+            if scale == CONSTANTS.DEFAULT_SCALE:
                 combobox.setCurrentIndex(combobox.count() - 1)
 
     def getScalesComboboxValue(self):
-        return int(self.dockwidget.scalesComboBox.currentText())
+        if self.dockwidget.scalesComboBox.currentText().isdecimal():
+            return int(self.dockwidget.scalesComboBox.currentText())
+        
+        #when user input is not valid
+        self.dockwidget.scalesComboBox.setCurrentText(str(CONSTANTS.DEFAULT_SCALE))
+        return CONSTANTS.DEFAULT_SCALE
 
     def initClicktool(self):
         if not isinstance(self.iface.mapCanvas().mapTool(), ClickTool):
