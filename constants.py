@@ -1,7 +1,6 @@
 class Constants:
     DEFAULT_SCALES = [500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000]
     DEFAULT_SCALE = 2500
-    DEFAULT_DPIS = [48, 96, 144, 192, 240, 288, 336]
     PAPERS = {
         "A0":(841,1189),
         "A1":(594,841),
@@ -21,6 +20,12 @@ class Constants:
         "right":10,
         "top":20,
         "bottom":15
+    }
+    WIDEMODE_MARGINS = {
+        "left":10,
+        "right":10,
+        "top":10,
+        "bottom":10
     }
     TITLE_FONTSIZE = 20
     SUBTEXT_FONTSIZE = 10

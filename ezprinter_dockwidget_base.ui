@@ -17,6 +17,16 @@
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
      <layout class="QGridLayout" name="gridLayout_2">
+      <item row="1" column="6">
+       <widget class="QPushButton" name="selectButton">
+        <property name="text">
+         <string>Select on Map</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="papersComboBox"/>
+      </item>
       <item row="1" column="3">
        <widget class="QComboBox" name="scalesComboBox">
         <property name="maximumSize">
@@ -63,14 +73,17 @@
        </widget>
       </item>
       <item row="1" column="5">
-       <widget class="QPushButton" name="selectButton">
+       <widget class="QCheckBox" name="wideModeCheckBox">
+        <property name="maximumSize">
+         <size>
+          <width>150</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
-         <string>Select on Map</string>
+         <string>Widemode</string>
         </property>
        </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QComboBox" name="papersComboBox"/>
       </item>
      </layout>
     </item>
