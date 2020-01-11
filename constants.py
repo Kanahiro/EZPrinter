@@ -22,5 +22,6 @@ class Constants:
         "top":20,
         "bottom":15
     }
+    WIDEMODE_MARGINS = 10
     TITLE_FONTSIZE = 20
     SUBTEXT_FONTSIZE = 10
