@@ -9,11 +9,16 @@ from qgis.PyQt import QtGui, QtWidgets, uic
 from .constants import Constants as CONSTANTS
 
 class PrintWindow():
-    def __init__(self, iface, printLayout, projectMap):
+    def __init__(self, iface, printLayout, projectMap, widemode):
         self.ui = uic.loadUi(os.path.join(os.path.dirname(__file__), 'printWindow.ui'))
         self.iface = iface
         self.printLayout = printLayout
         self.projectMap = projectMap
+        self.widemode = widemode
+
+        self.margins = CONSTANTS.PAPER_MARGINS
+        if self.widemode:
+            self.margins = CONSTANTS.WIDEMODE_MARGINS
 
         self.setPdfImageOf(self.printLayout)
         self.initCustomGui()
@@ -65,7 +70,7 @@ class PrintWindow():
 
         titleLabel = QgsLayoutItemLabel(self.printLayout)
         titleLabel.setText(self.ui.titleLineEdit.text())
-        titleLabel.setPos(CONSTANTS.PAPER_MARGINS["left"], CONSTANTS.PAPER_MARGINS["top"] - CONSTANTS.TITLE_FONTSIZE / 2)
+        titleLabel.setPos(self.margins["left"], self.margins["top"] - CONSTANTS.TITLE_FONTSIZE / 2)
         titleLabel.setFont(titleFont)
         titleLabel.adjustSizeToText()
         return titleLabel
@@ -81,7 +86,7 @@ class PrintWindow():
         scaleBar.setNumberOfSegmentsLeft(0)
         scaleBar.setNumberOfSegments (3)
         scaleBar.update()
-        scaleBar.setPos(CONSTANTS.PAPER_MARGINS['left'], paperSize.height() - CONSTANTS.PAPER_MARGINS['bottom'] - 15)
+        scaleBar.setPos(self.margins['left'], paperSize.height() - self.margins['bottom'] - 15)
 
         return scaleBar
 
@@ -95,7 +100,7 @@ class PrintWindow():
 
         subtextLabel = QgsLayoutItemLabel(self.printLayout)
         subtextLabel.setText(self.ui.subtextLineEdit.text())
-        subtextLabel.setPos(CONSTANTS.PAPER_MARGINS["left"], paperSize.height() - CONSTANTS.PAPER_MARGINS['bottom'])
+        subtextLabel.setPos(self.margins["left"], paperSize.height() - self.margins['bottom'])
         subtextLabel.setFont(subtextFont)
         subtextLabel.adjustSizeToText()
         return subtextLabel

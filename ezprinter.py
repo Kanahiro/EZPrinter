@@ -282,14 +282,15 @@ class EZPrinter:
         paperSize = self.getPapersComboboxValue()
         printScale = self.getScalesComboboxValue()
         horizontal = self.dockwidget.horizontalCheckBox.isChecked()
-        ct = ClickTool(self.iface,  self.mapCanvasClicked, paperSize, printScale, horizontal)
+        widemode = self.dockwidget.wideModeCheckBox.isChecked()
+        ct = ClickTool(self.iface,  self.mapCanvasClicked, paperSize, printScale, horizontal, widemode)
         self.iface.mapCanvas().setMapTool(ct)
 
     def toggleGuiChangeEvent(self):
         self.dockwidget.papersComboBox.currentIndexChanged.connect(self.initClicktool)
         self.dockwidget.scalesComboBox.currentTextChanged.connect(self.initClicktool)
         self.dockwidget.horizontalCheckBox.stateChanged.connect(self.initClicktool)
-        #self.dockwidget.wideModeCheckBox.stateChanged.connect(self.initClicktool)
+        self.dockwidget.wideModeCheckBox.stateChanged.connect(self.initClicktool)
 
     def initCustomGUIs(self):
         self.initPapersCombobox()
@@ -317,7 +318,7 @@ class EZPrinter:
         paperSize = self.getPapersComboboxValue()
         printScale = self.getScalesComboboxValue()
         horizontal = self.dockwidget.horizontalCheckBox.isChecked()
-        #widemode = self.dockwidget.wideModeCheckBox.isChecked()
+        widemode = self.dockwidget.wideModeCheckBox.isChecked()
         rotation = self.iface.mapCanvas().rotation()
 
         #init PrintLayout
@@ -337,16 +338,22 @@ class EZPrinter:
         page.setPageSize(QgsLayoutSize(paperWidth, paperHeight))
 
         #map area
+        ##margin setting
+        margins = CONSTANTS.PAPER_MARGINS
+        if widemode:
+            margins = CONSTANTS.WIDEMODE_MARGINS
+
         ##papersize Setting
-        mapWidth = paperWidth - CONSTANTS.PAPER_MARGINS['left'] - CONSTANTS.PAPER_MARGINS['right']
-        mapHeight = paperHeight - CONSTANTS.PAPER_MARGINS['top'] - CONSTANTS.PAPER_MARGINS['bottom']
+        mapWidth = paperWidth - margins['left'] - margins['right']
+        mapHeight = paperHeight - margins['top'] - margins['bottom']
         
         ##mapsetting on paper
         projectMap = QgsLayoutItemMap(printLayout)
         projectMap.updateBoundingRect()
-        projectMap.setRect(QRectF(CONSTANTS.PAPER_MARGINS['left'], CONSTANTS.PAPER_MARGINS['top'], mapWidth, mapHeight)) 
-        projectMap.setPos(CONSTANTS.PAPER_MARGINS['left'], CONSTANTS.PAPER_MARGINS['top'])
+        projectMap.setRect(QRectF(margins['left'], margins['top'], mapWidth, mapHeight)) 
+        projectMap.setPos(margins['left'], margins['top'])
         projectMap.setFrameEnabled(True)
+
         ##map geometry setting
         projectMap.setLayers(project.mapThemeCollection().masterVisibleLayers())
         ###when map is rotated, extent setting will not work correctly.
@@ -355,21 +362,10 @@ class EZPrinter:
         projectMap.setExtent(QgsRectangle(coordinates["topLeft"], coordinates["bottomRight"]))
         projectMap.setMapRotation(rotation)
         projectMap.setScale(printScale)
-        projectMap.attemptSetSceneRect(QRectF(CONSTANTS.PAPER_MARGINS['left'], CONSTANTS.PAPER_MARGINS['top'], mapWidth, mapHeight))
+        projectMap.attemptSetSceneRect(QRectF(margins['left'], margins['top'], mapWidth, mapHeight))
         
         printLayout.addItem(projectMap)
 
-        '''
-        #output PDF
-        exporter =  QgsLayoutExporter(printLayout)
-        pdf_settings = exporter.PdfExportSettings()
-        exporter.exportToPdf("/Users/kanahiroiguchi/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/ezprinter/test.pdf", pdf_settings)
-        
-        #render image on memory
-        img_settings = exporter.ImageExportSettings()
-        printLayoutImage = exporter.renderPageToImage(0)
-        '''
-
         #preview
-        pw = PrintWindow(self.iface, printLayout, projectMap)
+        pw = PrintWindow(self.iface, printLayout, projectMap, widemode)
         self.iface.mapCanvas().setMapTool(self.previous_map_tool)
