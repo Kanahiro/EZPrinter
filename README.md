@@ -9,6 +9,7 @@ QGIS plugin to make pdf easily with Map area view.
 - Pushing "Select on map", you can select Print Area on MapCanvas.
 - When you define Print Area, a dialog will pop-up.
 - You can edit print settings - Title, Subtext and Scale bar.
+- If you need no text on the paper, Wide Mode makes you able to define wider print area.
 - By "Export PDF", you can make PDF file where you want.
 
 # Contact
