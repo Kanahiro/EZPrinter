@@ -6,7 +6,7 @@ from qgis.PyQt.QtGui import QCursor, QPixmap, QImage, QPainter
 from .constants import Constants as CONSTANTS
 
 class ClickTool(QgsMapTool):
-    def __init__(self, iface, callback, paperSize, printScale, horizontal=False, wideMode=True):
+    def __init__(self, iface, callback, paperSize, printScale, horizontal=False, wideMode=False):
         QgsMapTool.__init__(self,iface.mapCanvas())
         self.iface      = iface
         self.callback   = callback
@@ -15,6 +15,11 @@ class ClickTool(QgsMapTool):
         self.horizontal = horizontal
         self.wideMode = wideMode
         self.drugging = False
+
+        self.margins = CONSTANTS.PAPER_MARGINS
+        if self.wideMode:
+            self.margins = CONSTANTS.WIDEMODE_MARGINS
+
         self.reloadCursorRectangle()
         return None
 
@@ -68,15 +73,16 @@ class ClickTool(QgsMapTool):
 
     def calcRectSize(self):
         #mili meter of papersize
-        width = self.paperSize[0] - CONSTANTS.PAPER_MARGINS['left'] - CONSTANTS.PAPER_MARGINS['right']
-        height = self.paperSize[1] - CONSTANTS.PAPER_MARGINS['top'] - CONSTANTS.PAPER_MARGINS['bottom']
+        width = self.paperSize[0] - self.margins['left'] - self.margins['right']
+        height = self.paperSize[1] - self.margins['top'] - self.margins['bottom']
         if self.horizontal:
-            width = self.paperSize[1] - CONSTANTS.PAPER_MARGINS['left'] - CONSTANTS.PAPER_MARGINS['right']
-            height = self.paperSize[0] - CONSTANTS.PAPER_MARGINS['top'] - CONSTANTS.PAPER_MARGINS['bottom']
+            width = self.paperSize[1] - self.margins['left'] - self.margins['right']
+            height = self.paperSize[0] - self.margins['top'] - self.margins['bottom']
 
         #pixel calculated by the mili meters, dpi and scale
         zoom = round(self.iface.mapCanvas().scale())
         dpi = self.iface.mapCanvas().mapSettings().outputDpi()
         rectSize = (width * dpi / 25.4 * self.printScale / zoom,
                     height * dpi / 25.4 * self.printScale / zoom)
+        print(zoom, dpi, rectSize)
         return rectSize
