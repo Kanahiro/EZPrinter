@@ -227,6 +227,7 @@ class EZPrinter:
             if self.dockwidget == None:
                 # Create the dockwidget (after translation) and keep reference
                 self.dockwidget = EZPrinterDockWidget()
+                self.initCustomGUIs()
 
             # connect to provide cleanup on closing of dockwidget
             self.dockwidget.closingPlugin.connect(self.onClosePlugin)
@@ -236,7 +237,6 @@ class EZPrinter:
             self.iface.addDockWidget(Qt.TopDockWidgetArea, self.dockwidget)
             self.dockwidget.show()
 
-        self.initCustomGUIs()
 
     def initPapersCombobox(self):
         combobox = self.dockwidget.papersComboBox
